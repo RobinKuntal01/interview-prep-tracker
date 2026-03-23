@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robin's Python Interview Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --surface2: #1e2128;
+    --border: #2a2d35;
+    --border2: #353840;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #6ee7b7;
+    --accent2: #a78bfa;
+    --accent3: #f9a8d4;
+    --accent4: #fcd34d;
+    --accent5: #fb923c;
+    --accent6: #60a5fa;
+    --danger: #f87171;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .header {
+    padding: 2rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .header-left h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  .header-left p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-family: var(--mono);
+  }
+  .header-stats {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .hstat {
+    text-align: right;
+  }
+  .hstat-num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .hstat-lbl {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* PROGRESS BAR */
+  .global-progress {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .progress-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 130px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 1.25rem 0;
+  }
+  .sidebar-section {
+    padding: 0 1rem 1rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .phase-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 13px;
+    text-align: left;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .phase-btn:hover { background: var(--surface2); color: var(--text); }
+  .phase-btn.active { background: var(--surface2); color: var(--text); }
+  .phase-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .phase-pct {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .sidebar-tools { padding: 0.75rem 1rem; }
+  .tool-btn {
+    display: block; width: 100%; padding: 7px 10px;
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; color: var(--muted);
+    font-family: var(--sans); font-size: 12px; text-align: left;
+    transition: all 0.15s; margin-bottom: 6px;
+  }
+  .tool-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+
+  /* MAIN */
+  .main { padding: 1.5rem 2rem; overflow-y: auto; }
+
+  .phase-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;
+  }
+  .phase-title {
+    font-family: var(--mono); font-size: 15px; font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .phase-badge {
+    font-size: 10px; padding: 2px 8px; border-radius: 20px;
+    font-family: var(--mono); border: 1px solid;
+  }
+  .phase-actions { display: flex; gap: 8px; }
+  .act-btn {
+    font-size: 11px; padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border2); background: transparent;
+    cursor: pointer; color: var(--muted); font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .act-btn:hover { background: var(--surface2); color: var(--text); }
+
+  /* WEEK SECTION */
+  .week-section { margin-bottom: 1.25rem; }
+  .week-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .week-header:hover { background: var(--surface2); }
+  .week-header.collapsed { border-radius: 8px; }
+  .week-label {
+    font-family: var(--mono); font-size: 11px;
+    padding: 2px 8px; border-radius: 4px;
+    border: 1px solid var(--border2); color: var(--muted);
+  }
+  .week-title { font-size: 13px; font-weight: 500; flex: 1; }
+  .week-progress-mini {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+  }
+  .mini-track {
+    width: 60px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden;
+  }
+  .mini-fill { height: 100%; border-radius: 1px; transition: width 0.3s; }
+  .chev {
+    width: 14px; height: 14px; color: var(--muted);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .chev.open { transform: rotate(90deg); }
+
+  .week-body {
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 8px 8px; overflow: hidden;
+  }
+  .week-body.hidden { display: none; }
+
+  /* TOPIC ROWS */
+  .topic-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .topic-row:last-child { border-bottom: none; }
+  .topic-row:hover { background: var(--surface2); }
+  .topic-row.done { opacity: 0.5; }
+  .topic-row.done .topic-name { text-decoration: line-through; }
+
+  .check-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 1px solid var(--border2); background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s; cursor: pointer;
+  }
+  .check-box.checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .check-box svg { display: none; }
+  .check-box.checked svg { display: block; }
+
+  .topic-name { font-size: 13px; color: var(--text); }
+  .topic-meta { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  .priority-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 10px;
+    border: 1px solid; white-space: nowrap; font-family: var(--mono);
+  }
+  .p-hot { color: #fb923c; border-color: #fb923c44; background: #fb923c11; }
+  .p-deep { color: #a78bfa; border-color: #a78bfa44; background: #a78bfa11; }
+  .p-med { color: #60a5fa; border-color: #60a5fa44; background: #60a5fa11; }
+  .p-key { color: #f9a8d4; border-color: #f9a8d444; background: #f9a8d411; }
+
+  /* NOTES PANEL */
+  .notes-panel {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .notes-header {
+    padding: 10px 14px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .notes-area {
+    width: 100%; background: var(--bg);
+    border: none; outline: none; resize: none;
+    color: var(--text); font-family: var(--mono); font-size: 12px;
+    padding: 12px 14px; line-height: 1.7; min-height: 100px;
+  }
+
+  /* LOG */
+  .log-section { margin-top: 1.5rem; }
+  .log-header {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 0.5px; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .log-entry {
+    display: flex; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border); font-size: 12px;
+    align-items: flex-start;
+  }
+  .log-time { font-family: var(--mono); color: var(--muted); white-space: nowrap; min-width: 130px; }
+  .log-msg { color: var(--text); }
+  .log-tag { font-family: var(--mono); font-size: 10px; color: var(--accent); margin-left: 6px; }
+  .no-log { font-size: 12px; color: var(--muted); font-family: var(--mono); padding: 8px 0; }
+
+  /* MOOD / DAILY */
+  .daily-bar {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px 14px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .daily-label { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .mood-btn {
+    background: transparent; border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+    font-size: 13px; transition: all 0.15s; color: var(--muted);
+  }
+  .mood-btn:hover, .mood-btn.selected { border-color: var(--accent); color: var(--accent); background: #6ee7b711; }
+  .daily-sep { width: 1px; height: 18px; background: var(--border); }
+  .day-input {
+    flex: 1; min-width: 140px; background: transparent;
+    border: none; outline: none; font-family: var(--mono);
+    font-size: 12px; color: var(--text);
+  }
+  .day-input::placeholder { color: var(--muted); }
+  .log-btn {
+    font-size: 11px; padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--accent); background: transparent;
+    cursor: pointer; color: var(--accent); font-family: var(--mono);
+    transition: all 0.15s;
+  }
+  .log-btn:hover { background: #6ee7b722; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 3rem 2rem; color: var(--muted); font-family: var(--mono); font-size: 13px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); padding: 0.75rem; display: flex; flex-wrap: wrap; gap: 6px; }
+    .phase-btn { width: auto; }
+    .header { padding: 1rem; }
+    .main { padding: 1rem; }
+    .global-progress { padding: 0.75rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>robin_prep.tracker</h1>
+    <p id="today-date">loading...</p>
+  </div>
+  <div class="header-stats">
+    <div class="hstat">
+      <div class="hstat-num" id="stat-done" style="color:var(--accent)">0</div>
+      <div class="hstat-lbl">topics done</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-num" id="stat-total" style="color:var(--muted)">0</div>
+      <div class="hstat-lbl">total topics</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-num" id="stat-streak" style="color:var(--accent4)">0</div>
+      <div class="hstat-lbl">day streak</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-num" id="stat-pct" style="color:var(--accent2)">0%</div>
+      <div class="hstat-lbl">complete</div>
+    </div>
+  </div>
+</div>
+
+<div class="global-progress">
+  <span class="progress-label" id="prog-phase-label">Overall progress</span>
+  <div class="progress-track"><div class="progress-fill" id="global-fill" style="width:0%"></div></div>
+  <span class="progress-label" id="prog-pct">0%</span>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Phases</div>
+      <button class="phase-btn active" onclick="showPhase(0)" id="pbtn-0">
+        <span class="phase-dot" style="background:#6ee7b7"></span> Week 0 · Basics
+        <span class="phase-pct" id="ppct-0">0%</span>
+      </button>
+      <button class="phase-btn" onclick="showPhase(1)" id="pbtn-1">
+        <span class="phase-dot" style="background:#60a5fa"></span> Ph 1 · Python Core
+        <span class="phase-pct" id="ppct-1">0%</span>
+      </button>
+      <button class="phase-btn" onclick="showPhase(2)" id="pbtn-2">
+        <span class="phase-dot" style="background:#6ee7b7"></span> Ph 2 · Flask & APIs
+        <span class="phase-pct" id="ppct-2">0%</span>
+      </button>
+      <button class="phase-btn" onclick="showPhase(3)" id="pbtn-3">
+        <span class="phase-dot" style="background:#fcd34d"></span> Ph 3 · SQL & DB
+        <span class="phase-pct" id="ppct-3">0%</span>
+      </button>
+      <button class="phase-btn" onclick="showPhase(4)" id="pbtn-4">
+        <span class="phase-dot" style="background:#a78bfa"></span> Ph 4 · Sys Design
+        <span class="phase-pct" id="ppct-4">0%</span>
+      </button>
+      <button class="phase-btn" onclick="showPhase(5)" id="pbtn-5">
+        <span class="phase-dot" style="background:#fb923c"></span> Ph 5 · DSA
+        <span class="phase-pct" id="ppct-5">0%</span>
+      </button>
+      <button class="phase-btn" onclick="showPhase(6)" id="pbtn-6">
+        <span class="phase-dot" style="background:#f9a8d4"></span> Ph 6 · Mock & Polish
+        <span class="phase-pct" id="ppct-6">0%</span>
+      </button>
+    </div>
+    <div class="sidebar-tools">
+      <div class="sidebar-label" style="margin-bottom:8px">Tools</div>
+      <button class="tool-btn" onclick="exportData()">⬇ Export progress JSON</button>
+      <button class="tool-btn" onclick="importData()">⬆ Import progress JSON</button>
+      <button class="tool-btn" onclick="resetAll()" style="color:var(--danger);border-color:#f8717144">↺ Reset all progress</button>
+    </div>
+  </div>
+
+  <div class="main" id="main-panel">
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {
+    id:0, label:"Week 0 · Python Basics (Interview Depth)", weeks:"Pre-phase · 1 week", color:"#6ee7b7",
+    badgeColor:"#6ee7b7", badge:"Pre-phase",
+    weeks_data:[
+      { week:"Week 0", title:"Variables, types & type coercion",
+        topics:[
+          {id:"w0-1",name:"Mutable vs immutable — memory model, names vs containers","meta":"Wed","priority":"hot"},
+          {id:"w0-2",name:"== vs is — identity, equality, string interning gotcha","meta":"Wed","priority":"hot"},
+          {id:"w0-3",name:"Type coercion, truthiness rules (0, '', [], None)","meta":"Wed","priority":"med"},
+          {id:"w0-4",name:"Iterator protocol — __iter__ and __next__ internals","meta":"Thu","priority":"hot"},
+          {id:"w0-5",name:"List comprehension vs generator expression — memory diff","meta":"Thu","priority":"hot"},
+          {id:"w0-6",name:"enumerate, zip, map, filter — when cleaner than loops","meta":"Thu","priority":"med"},
+          {id:"w0-7",name:"for...else clause — what it does","meta":"Thu","priority":"med"},
+          {id:"w0-8",name:"LEGB scope rule — global and nonlocal keywords","meta":"Fri","priority":"hot"},
+          {id:"w0-9",name:"Closures — free variables, __closure__, loop gotcha (lambda i=i)","meta":"Fri","priority":"hot"},
+          {id:"w0-10",name:"Mutable default argument trap — def f(x=[])","meta":"Fri","priority":"hot"},
+          {id:"w0-11",name:"*args and **kwargs internals — tuple and dict","meta":"Fri","priority":"med"},
+          {id:"w0-12",name:"list — dynamic array, O(1) amortized append, O(n) insert","meta":"Sat","priority":"hot"},
+          {id:"w0-13",name:"dict — hash table, collision resolution, insertion order (3.7+)","meta":"Sat","priority":"hot"},
+          {id:"w0-14",name:"set — hash table, O(1) lookup, why list lookup is O(n)","meta":"Sat","priority":"hot"},
+          {id:"w0-15",name:"tuple — immutable, hashable, more compact than list","meta":"Sat","priority":"med"},
+          {id:"w0-16",name:"namedtuple vs dataclass — when to use each","meta":"Sat","priority":"med"},
+          {id:"w0-17",name:"10-question integration drill (no notes)","meta":"Sun","priority":"key"},
+        ]
+      }
+    ]
+  },
+  {
+    id:1, label:"Phase 1 · Python Core", weeks:"Weeks 1–3", color:"#60a5fa",
+    badgeColor:"#60a5fa", badge:"Weeks 1–3",
+    weeks_data:[
+      { week:"Week 1", title:"GIL, memory model & OOP internals",
+        topics:[
+          {id:"p1w1-1",name:"CPython memory model — reference counting, gc module","meta":"Wed","priority":"hot"},
+          {id:"p1w1-2",name:"Code: trigger reference cycle, fix with gc.collect()","meta":"Wed","priority":"key"},
+          {id:"p1w1-3",name:"GIL — why it exists, CPU-bound vs I/O-bound, workarounds","meta":"Thu","priority":"hot"},
+          {id:"p1w1-4",name:"Code: threading vs multiprocessing benchmark","meta":"Thu","priority":"key"},
+          {id:"p1w1-5",name:"MRO + C3 linearization — diamond inheritance","meta":"Fri","priority":"hot"},
+          {id:"p1w1-6",name:"Code: 3 diamond inheritance examples + __mro__ check","meta":"Fri","priority":"key"},
+          {id:"p1w1-7",name:"Dunder methods — __repr__, __eq__, __hash__, __slots__","meta":"Sat","priority":"hot"},
+          {id:"p1w1-8",name:"Code: Money class with full dunder implementation","meta":"Sat","priority":"key"},
+        ]
+      },
+      { week:"Week 2", title:"Decorators, async, generators",
+        topics:[
+          {id:"p1w2-1",name:"Closures deep dive — LEGB, free variables, cell objects","meta":"Wed","priority":"hot"},
+          {id:"p1w2-2",name:"Code: memoize decorator from scratch (no functools)","meta":"Wed","priority":"key"},
+          {id:"p1w2-3",name:"Parameterized + class decorators, functools.wraps","meta":"Thu","priority":"hot"},
+          {id:"p1w2-4",name:"Code: @retry(times=3, delay=1) with backoff","meta":"Thu","priority":"key"},
+          {id:"p1w2-5",name:"asyncio — event loop, coroutines, Tasks, gather()","meta":"Fri","priority":"hot"},
+          {id:"p1w2-6",name:"threading vs multiprocessing vs asyncio decision framework","meta":"Sat","priority":"hot"},
+          {id:"p1w2-7",name:"Generators — yield, send(), throw(), yield from","meta":"Sun","priority":"med"},
+          {id:"p1w2-8",name:"Code: lazy CSV reader with generators — measure memory","meta":"Sun","priority":"key"},
+        ]
+      },
+      { week:"Week 3", title:"Type system, metaclasses & descriptors",
+        topics:[
+          {id:"p1w3-1",name:"Descriptors — __get__, __set__, __delete__","meta":"Wed","priority":"deep"},
+          {id:"p1w3-2",name:"Code: implement property() from scratch","meta":"Wed","priority":"key"},
+          {id:"p1w3-3",name:"Metaclasses — type as metaclass, __new__ vs __init__","meta":"Thu","priority":"deep"},
+          {id:"p1w3-4",name:"typing module — TypeVar, Generic, Protocol, TypedDict","meta":"Fri","priority":"med"},
+          {id:"p1w3-5",name:"SOLID principles in Python with real examples","meta":"Sat","priority":"med"},
+          {id:"p1w3-6",name:"Phase 1 mock — 10 Python internals questions timed","meta":"Sun","priority":"key"},
+        ]
+      }
+    ]
+  },
+  {
+    id:2, label:"Phase 2 · Flask & APIs", weeks:"Weeks 4–6", color:"#6ee7b7",
+    badgeColor:"#6ee7b7", badge:"Weeks 4–6",
+    weeks_data:[
+      { week:"Week 4", title:"Flask internals — request lifecycle, contexts",
+        topics:[
+          {id:"p2w1-1",name:"WSGI protocol — how Flask sits on Werkzeug","meta":"Wed","priority":"hot"},
+          {id:"p2w1-2",name:"App context vs Request context — g, current_app, LocalProxy","meta":"Thu","priority":"hot"},
+          {id:"p2w1-3",name:"App factory + Blueprints — circular imports solved","meta":"Fri","priority":"hot"},
+          {id:"p2w1-4",name:"before_request, after_request, teardown hooks, signals","meta":"Sat","priority":"med"},
+          {id:"p2w1-5",name:"Narrate Yotta portal Flask architecture as 3-min story","meta":"Sun","priority":"key"},
+        ]
+      },
+      { week:"Week 5", title:"Redis deep dive + caching patterns",
+        topics:[
+          {id:"p2w2-1",name:"Redis data structures internals — Hash, ZSet, List, memory","meta":"Wed","priority":"hot"},
+          {id:"p2w2-2",name:"Cache stampede prevention — SET NX PX Lua script","meta":"Thu","priority":"hot"},
+          {id:"p2w2-3",name:"Redlock algorithm — distributed locks","meta":"Fri","priority":"deep"},
+          {id:"p2w2-4",name:"WATCH/MULTI/EXEC transactions vs Lua atomicity","meta":"Sat","priority":"deep"},
+          {id:"p2w2-5",name:"Redis eviction policies, persistence (RDB vs AOF)","meta":"Mon","priority":"med"},
+        ]
+      },
+      { week:"Week 6", title:"JWT, REST design, testing",
+        topics:[
+          {id:"p2w3-1",name:"JWT structure — header.payload.sig, HS256 vs RS256","meta":"Wed","priority":"hot"},
+          {id:"p2w3-2",name:"OAuth2 flows — Auth Code, Client Credentials, PKCE","meta":"Thu","priority":"hot"},
+          {id:"p2w3-3",name:"REST design — versioning, idempotency, cursor pagination","meta":"Fri","priority":"hot"},
+          {id:"p2w3-4",name:"pytest — fixtures, conftest, monkeypatch, parametrize","meta":"Sat","priority":"hot"},
+          {id:"p2w3-5",name:"Phase 2 mock — 10 Flask/API/Redis questions timed","meta":"Sun","priority":"key"},
+        ]
+      }
+    ]
+  },
+  {
+    id:3, label:"Phase 3 · SQL & DB", weeks:"Weeks 7–10", color:"#fcd34d",
+    badgeColor:"#fcd34d", badge:"Weeks 7–10",
+    weeks_data:[
+      { week:"Week 7", title:"SQL query mastery — window functions & CTEs",
+        topics:[
+          {id:"p3w1-1",name:"Window functions — ROW_NUMBER, RANK, PARTITION BY","meta":"Wed","priority":"hot"},
+          {id:"p3w1-2",name:"LAG, LEAD, FIRST_VALUE, SUM OVER (running totals)","meta":"Thu","priority":"hot"},
+          {id:"p3w1-3",name:"CTEs — WITH clause, recursive CTEs for hierarchies","meta":"Fri","priority":"hot"},
+          {id:"p3w1-4",name:"Correlated subqueries, lateral joins","meta":"Sat","priority":"med"},
+          {id:"p3w1-5",name:"LeetCode: 10 window function problems","meta":"ongoing","priority":"key"},
+        ]
+      },
+      { week:"Week 8", title:"Indexing, EXPLAIN & query optimization",
+        topics:[
+          {id:"p3w2-1",name:"B-tree index internals — how MySQL stores and uses them","meta":"Wed","priority":"hot"},
+          {id:"p3w2-2",name:"Composite index column order — selectivity, range predicates","meta":"Thu","priority":"hot"},
+          {id:"p3w2-3",name:"Covering index, index-only scan","meta":"Fri","priority":"hot"},
+          {id:"p3w2-4",name:"InnoDB MVCC — snapshots, undo log, row vs table locking","meta":"Sat","priority":"deep"},
+          {id:"p3w2-5",name:"Run EXPLAIN on 5 real Yotta queries — interpret all fields","meta":"ongoing","priority":"key"},
+        ]
+      },
+      { week:"Week 9", title:"SQLAlchemy — N+1, sessions, transactions",
+        topics:[
+          {id:"p3w3-1",name:"Session lifecycle — transient, pending, persistent, detached","meta":"Wed","priority":"hot"},
+          {id:"p3w3-2",name:"N+1 problem — detect with echo=True, fix with joinedload","meta":"Thu","priority":"hot"},
+          {id:"p3w3-3",name:"joinedload vs selectinload vs subqueryload — benchmark","meta":"Fri","priority":"med"},
+          {id:"p3w3-4",name:"SQLAlchemy 2.0 style — select() API, async SQLAlchemy","meta":"Sat","priority":"med"},
+          {id:"p3w3-5",name:"Transactions — ACID, isolation levels, deadlock simulation","meta":"Sun","priority":"hot"},
+        ]
+      },
+      { week:"Week 10", title:"DB design, normalization & integration",
+        topics:[
+          {id:"p3w4-1",name:"Normalization 1NF–BCNF with real examples","meta":"Wed","priority":"med"},
+          {id:"p3w4-2",name:"Sharding basics — horizontal partitioning, consistent hashing","meta":"Thu","priority":"med"},
+          {id:"p3w4-3",name:"PostgreSQL vs MySQL — JSONB, full-text, EXPLAIN ANALYZE","meta":"Fri","priority":"med"},
+          {id:"p3w4-4",name:"Phase 3 mock — 8 SQL + ORM questions timed (30 min)","meta":"Sat","priority":"key"},
+        ]
+      }
+    ]
+  },
+  {
+    id:4, label:"Phase 4 · System Design", weeks:"Weeks 11–14", color:"#a78bfa",
+    badgeColor:"#a78bfa", badge:"Weeks 11–14",
+    weeks_data:[
+      { week:"Week 11", title:"Fundamentals — scaling, CAP, load balancing",
+        topics:[
+          {id:"p4w1-1",name:"Horizontal vs vertical scaling, stateless design","meta":"Wed","priority":"hot"},
+          {id:"p4w1-2",name:"CAP theorem — CP vs AP real examples","meta":"Thu","priority":"hot"},
+          {id:"p4w1-3",name:"Load balancing algorithms + consistent hashing","meta":"Fri","priority":"hot"},
+          {id:"p4w1-4",name:"Design: URL shortener — full 45-min solution","meta":"Sat","priority":"key"},
+          {id:"p4w1-5",name:"CDN, DNS, TLS handshake (1.2 vs 1.3) in full detail","meta":"Sun","priority":"med"},
+        ]
+      },
+      { week:"Week 12", title:"Databases at scale + message queues",
+        topics:[
+          {id:"p4w2-1",name:"DB replication — leader-follower, replication lag","meta":"Wed","priority":"hot"},
+          {id:"p4w2-2",name:"Kafka — brokers, partitions, consumer groups, offsets","meta":"Thu","priority":"hot"},
+          {id:"p4w2-3",name:"Message delivery guarantees — at-least-once, exactly-once","meta":"Fri","priority":"hot"},
+          {id:"p4w2-4",name:"Design: notification system — fan-out, deduplication","meta":"Fri","priority":"key"},
+          {id:"p4w2-5",name:"Saga pattern, outbox pattern, 2PC trade-offs","meta":"Sat","priority":"deep"},
+        ]
+      },
+      { week:"Week 13", title:"Classic system design problems",
+        topics:[
+          {id:"p4w3-1",name:"Design: chat system (WhatsApp-like) — 45 min timed","meta":"Wed","priority":"key"},
+          {id:"p4w3-2",name:"Design: search autocomplete — trie, top-K, edge caching","meta":"Thu","priority":"key"},
+          {id:"p4w3-3",name:"Design: payment system — idempotency, double-spend","meta":"Fri","priority":"key"},
+          {id:"p4w3-4",name:"Design: Zabbix chatbot as full system design problem","meta":"Sun","priority":"key"},
+        ]
+      },
+      { week:"Week 14", title:"AI system design + microservices",
+        topics:[
+          {id:"p4w4-1",name:"Microservices — API gateway, circuit breaker, service discovery","meta":"Wed","priority":"hot"},
+          {id:"p4w4-2",name:"RAG system design — chunking, vector DB, hybrid retrieval","meta":"Thu","priority":"deep"},
+          {id:"p4w4-3",name:"Observability — metrics, logs, traces (your Zabbix context)","meta":"Fri","priority":"med"},
+          {id:"p4w4-4",name:"Full mock system design — 45 min timed, self-review","meta":"Sat","priority":"key"},
+        ]
+      }
+    ]
+  },
+  {
+    id:5, label:"Phase 5 · DSA", weeks:"Weeks 15–18", color:"#fb923c",
+    badgeColor:"#fb923c", badge:"Weeks 15–18",
+    weeks_data:[
+      { week:"Week 15", title:"Two pointers, sliding window, binary search",
+        topics:[
+          {id:"p5w1-1",name:"Two pointers template + 3 problems","meta":"Wed","priority":"hot"},
+          {id:"p5w1-2",name:"Sliding window — fixed and variable templates + 3 problems","meta":"Thu","priority":"hot"},
+          {id:"p5w1-3",name:"Binary search — all 4 variants + 3 problems","meta":"Fri","priority":"hot"},
+          {id:"p5w1-4",name:"Mixed drill — 4 problems timed (60 min)","meta":"Sat","priority":"key"},
+        ]
+      },
+      { week:"Week 16", title:"BFS, DFS, graphs, topological sort",
+        topics:[
+          {id:"p5w2-1",name:"BFS template — level-order, shortest path + 3 problems","meta":"Wed","priority":"hot"},
+          {id:"p5w2-2",name:"DFS template — recursive and iterative + 3 problems","meta":"Thu","priority":"hot"},
+          {id:"p5w2-3",name:"Topological sort — Kahn's BFS + DFS + 3 problems","meta":"Fri","priority":"hot"},
+          {id:"p5w2-4",name:"Union-Find (DSU) — path compression + 3 problems","meta":"Sat","priority":"med"},
+        ]
+      },
+      { week:"Week 17", title:"Dynamic programming — all key patterns",
+        topics:[
+          {id:"p5w3-1",name:"1D DP — Climbing Stairs, House Robber, Coin Change","meta":"Wed","priority":"hot"},
+          {id:"p5w3-2",name:"2D DP — Unique Paths, LCS, Min Path Sum","meta":"Thu","priority":"hot"},
+          {id:"p5w3-3",name:"0/1 knapsack + unbounded knapsack variants","meta":"Fri","priority":"hot"},
+          {id:"p5w3-4",name:"DP on strings — Edit Distance, Palindromic Substrings","meta":"Sat","priority":"hot"},
+          {id:"p5w3-5",name:"Mixed DP drill — 3 problems timed (60 min)","meta":"Sun","priority":"key"},
+        ]
+      },
+      { week:"Week 18", title:"Heaps, backtracking, full mock contests",
+        topics:[
+          {id:"p5w4-1",name:"Heap patterns — top-K, K closest, merge K sorted + 3 problems","meta":"Wed","priority":"hot"},
+          {id:"p5w4-2",name:"Monotonic stack — next greater element + 3 problems","meta":"Thu","priority":"med"},
+          {id:"p5w4-3",name:"Backtracking template — combinations, permutations + 3 problems","meta":"Fri","priority":"med"},
+          {id:"p5w4-4",name:"Full LeetCode mock contest — 2 mediums + 1 hard (90 min)","meta":"Sat","priority":"key"},
+        ]
+      }
+    ]
+  },
+  {
+    id:6, label:"Phase 6 · Mock & Polish", weeks:"Weeks 19–22", color:"#f9a8d4",
+    badgeColor:"#f9a8d4", badge:"Weeks 19–22",
+    weeks_data:[
+      { week:"Week 19", title:"Gap closure — FastAPI, Docker, PostgreSQL",
+        topics:[
+          {id:"p6w1-1",name:"FastAPI — Pydantic, async handlers, dependency injection","meta":"Wed","priority":"hot"},
+          {id:"p6w1-2",name:"Docker — Dockerfile, multi-stage builds, Dockerize chatbot","meta":"Fri","priority":"med"},
+          {id:"p6w1-3",name:"PostgreSQL — JSONB, GIN index, EXPLAIN ANALYZE","meta":"Sat","priority":"med"},
+          {id:"p6w1-4",name:"Mock interview #1 (Pramp) — log feedback","meta":"Sun","priority":"key"},
+          {id:"p6w1-5",name:"Mock interview #2","meta":"Tue","priority":"key"},
+        ]
+      },
+      { week:"Week 20", title:"Behavioral stories + company-specific prep",
+        topics:[
+          {id:"p6w2-1",name:"Write 5 STAR stories — career pivot, challenge, conflict, failure, leadership","meta":"Wed","priority":"hot"},
+          {id:"p6w2-2",name:"Practice stories aloud — record, listen, refine","meta":"Thu","priority":"key"},
+          {id:"p6w2-3",name:"Company research — 2 targets, engineering blog, tech stack","meta":"Fri","priority":"med"},
+          {id:"p6w2-4",name:"Mock interview #3 — behavioral + technical combined","meta":"Sat","priority":"key"},
+          {id:"p6w2-5",name:"LeetCode company-tag problems for target companies","meta":"Sun","priority":"hot"},
+        ]
+      },
+      { week:"Week 21", title:"High-intensity mock week",
+        topics:[
+          {id:"p6w3-1",name:"Full loop simulation — DSA + system design back to back","meta":"Wed","priority":"key"},
+          {id:"p6w3-2",name:"Mock: Python internals + Flask deep-dive round","meta":"Fri","priority":"key"},
+          {id:"p6w3-3",name:"Salary negotiation research — levels.fyi, Glassdoor","meta":"Sat","priority":"med"},
+          {id:"p6w3-4",name:"Apply to 3–5 target companies — personalized notes","meta":"Mon","priority":"key"},
+        ]
+      },
+      { week:"Week 22", title:"Final polish & interview execution",
+        topics:[
+          {id:"p6w4-1",name:"Final review: Python internals cheatsheet (own notes)","meta":"Wed","priority":"med"},
+          {id:"p6w4-2",name:"Final DSA: 3 warm-up problems spanning 3 patterns","meta":"Thu","priority":"med"},
+          {id:"p6w4-3",name:"Final behavioral: all 5 STAR stories one more time","meta":"Fri","priority":"key"},
+          {id:"p6w4-4",name:"Prep 5 questions to ask interviewers","meta":"Fri","priority":"med"},
+          {id:"p6w4-5",name:"Interviews — execute the framework","meta":"Mon+","priority":"key"},
+        ]
+      }
+    ]
+  }
+];
+
+let state = { checked:{}, notes:{}, log:[], streak:0, lastStudyDate:null, mood:null, dayNote:"", collapsed:{} };
+
+function loadState(){
+  try { const s = localStorage.getItem('robin_prep_v2'); if(s) state = JSON.parse(s); } catch(e){}
+}
+function saveState(){
+  try { localStorage.setItem('robin_prep_v2', JSON.stringify(state)); } catch(e){}
+}
+
+function allTopics(){
+  const t = [];
+  DATA.forEach(p => p.weeks_data.forEach(w => w.topics.forEach(tp => t.push(tp))));
+  return t;
+}
+function phaseTopic(pi){
+  const t = [];
+  DATA[pi].weeks_data.forEach(w => w.topics.forEach(tp => t.push(tp)));
+  return t;
+}
+
+function updateStats(){
+  const all = allTopics();
+  const done = all.filter(t => state.checked[t.id]).length;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-total').textContent = all.length;
+  const pct = Math.round(done/all.length*100);
+  document.getElementById('stat-pct').textContent = pct+'%';
+  document.getElementById('global-fill').style.width = pct+'%';
+  document.getElementById('prog-pct').textContent = pct+'%';
+  document.getElementById('stat-streak').textContent = state.streak||0;
+  DATA.forEach((p,pi) => {
+    const pts = phaseTopic(pi);
+    const pdone = pts.filter(t=>state.checked[t.id]).length;
+    const ppct = pts.length ? Math.round(pdone/pts.length*100) : 0;
+    const el = document.getElementById('ppct-'+pi);
+    if(el) el.textContent = ppct+'%';
+  });
+}
+
+let currentPhase = 0;
+
+function showPhase(pi){
+  currentPhase = pi;
+  document.querySelectorAll('.phase-btn').forEach((b,i)=>b.classList.toggle('active',i===pi));
+  renderMain(pi);
+}
+
+function renderMain(pi){
+  const p = DATA[pi];
+  const pts = phaseTopic(pi);
+  const done = pts.filter(t=>state.checked[t.id]).length;
+  const pct = pts.length ? Math.round(done/pts.length*100) : 0;
+
+  let html = `
+  <div class="daily-bar">
+    <span class="daily-label">today's mood:</span>
+    <button class="mood-btn ${state.mood==='great'?'selected':''}" onclick="setMood('great')">great</button>
+    <button class="mood-btn ${state.mood==='ok'?'selected':''}" onclick="setMood('ok')">ok</button>
+    <button class="mood-btn ${state.mood==='tired'?'selected':''}" onclick="setMood('tired')">tired</button>
+    <div class="daily-sep"></div>
+    <input class="day-input" id="day-note-input" placeholder="today's focus or note..." value="${state.dayNote||''}">
+    <button class="log-btn" onclick="logDay()">log session</button>
+  </div>
+
+  <div class="phase-header">
+    <div class="phase-title">
+      <span style="width:10px;height:10px;border-radius:50%;background:${p.color};display:inline-block;flex-shrink:0"></span>
+      ${p.label}
+      <span class="phase-badge" style="color:${p.color};border-color:${p.color}44;background:${p.color}11">${p.badge}</span>
+    </div>
+    <div class="phase-actions">
+      <button class="act-btn" onclick="markAllPhase(${pi},true)">mark all done</button>
+      <button class="act-btn" onclick="markAllPhase(${pi},false)">clear phase</button>
+    </div>
+  </div>`;
+
+  p.weeks_data.forEach((w,wi)=>{
+    const wdone = w.topics.filter(t=>state.checked[t.id]).length;
+    const wpct = Math.round(wdone/w.topics.length*100);
+    const colKey = pi+'_'+wi;
+    const isCol = state.collapsed[colKey];
+
+    html += `<div class="week-section">
+      <div class="week-header ${isCol?'collapsed':''}" onclick="toggleWeek(${pi},${wi})">
+        <span class="week-label">${w.week}</span>
+        <span class="week-title">${w.title}</span>
+        <div class="week-progress-mini">
+          <div class="mini-track"><div class="mini-fill" style="width:${wpct}%;background:${p.color}"></div></div>
+          <span>${wdone}/${w.topics.length}</span>
+        </div>
+        <svg class="chev ${isCol?'':'open'}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
+      </div>
+      <div class="week-body ${isCol?'hidden':''}">`;
+
+    w.topics.forEach(t=>{
+      const checked = !!state.checked[t.id];
+      const pmap = {hot:'p-hot',deep:'p-deep',med:'p-med',key:'p-key'};
+      const plabel = {hot:'🔥 high-freq',deep:'deep dive',med:'medium',key:'milestone'};
+      html += `<div class="topic-row ${checked?'done':''}" onclick="toggleTopic('${t.id}')">
+        <div class="check-box ${checked?'checked':''}" onclick="toggleTopic('${t.id}');event.stopPropagation()">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#0e0f11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="topic-name">${t.name}</div>
+        <div class="topic-meta">${t.meta}</div>
+        <span class="priority-tag ${pmap[t.priority]}">${plabel[t.priority]}</span>
+      </div>`;
+    });
+
+    const noteKey = `notes_${pi}_${wi}`;
+    html += `</div></div>
+    <div class="notes-panel">
+      <div class="notes-header"><span>notes · ${w.week}</span><span style="color:var(--muted);font-size:10px">auto-saved</span></div>
+      <textarea class="notes-area" id="note-${noteKey}" placeholder="paste code snippets, weak spots, key insights..." oninput="saveNote('${noteKey}',this.value)">${state.notes[noteKey]||''}</textarea>
+    </div>`;
+  });
+
+  html += `<div class="log-section">
+    <div class="log-header"><span>SESSION LOG</span><span style="color:var(--muted)">${state.log.length} entries</span></div>`;
+
+  const phaseLogs = state.log.filter(l=>l.phase===pi).slice(-5).reverse();
+  if(phaseLogs.length===0){
+    html += `<div class="no-log">no sessions logged yet for this phase</div>`;
+  } else {
+    phaseLogs.forEach(l=>{
+      html += `<div class="log-entry">
+        <span class="log-time">${l.date}</span>
+        <span class="log-msg">${l.note||'session logged'}<span class="log-tag">${l.mood||''}</span></span>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  document.getElementById('main-panel').innerHTML = html;
+}
+
+function toggleTopic(id){
+  state.checked[id] = !state.checked[id];
+  const entry = {date: new Date().toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'}), phase:currentPhase, note:`marked: topic`, mood:state.mood||''};
+  updateStreak();
+  saveState();
+  updateStats();
+  renderMain(currentPhase);
+}
+
+function toggleWeek(pi,wi){
+  const key = pi+'_'+wi;
+  state.collapsed[key] = !state.collapsed[key];
+  saveState();
+  renderMain(pi);
+}
+
+function saveNote(key,val){
+  state.notes[key] = val;
+  saveState();
+}
+
+function markAllPhase(pi,val){
+  DATA[pi].weeks_data.forEach(w=>w.topics.forEach(t=>{ state.checked[t.id]=val; }));
+  saveState(); updateStats(); renderMain(pi);
+}
+
+function setMood(m){
+  state.mood = m;
+  saveState();
+  renderMain(currentPhase);
+}
+
+function logDay(){
+  const note = document.getElementById('day-note-input')?.value || '';
+  state.dayNote = note;
+  state.log.push({
+    date: new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}),
+    phase: currentPhase,
+    note: note || 'session logged',
+    mood: state.mood||''
+  });
+  updateStreak();
+  saveState();
+  renderMain(currentPhase);
+}
+
+function updateStreak(){
+  const today = new Date().toDateString();
+  if(state.lastStudyDate !== today){
+    const yesterday = new Date(Date.now()-86400000).toDateString();
+    if(state.lastStudyDate === yesterday){
+      state.streak = (state.streak||0)+1;
+    } else if(state.lastStudyDate !== today){
+      state.streak = 1;
+    }
+    state.lastStudyDate = today;
+  }
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'robin_prep_progress.json';
+  a.click();
+}
+
+function importData(){
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.json';
+  inp.onchange = e=>{
+    const f = e.target.files[0];
+    const r = new FileReader();
+    r.onload = ev=>{ try{ state=JSON.parse(ev.target.result); saveState(); updateStats(); renderMain(currentPhase); }catch(err){ alert('Invalid file'); } };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+function resetAll(){
+  if(confirm('Reset ALL progress? This cannot be undone.')){
+    state={checked:{},notes:{},log:[],streak:0,lastStudyDate:null,mood:null,dayNote:'',collapsed:{}};
+    saveState(); updateStats(); renderMain(currentPhase);
+  }
+}
+
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+loadState();
+updateStats();
+renderMain(0);
+</script>
+</body>
+</html>
